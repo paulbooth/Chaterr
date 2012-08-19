@@ -41,12 +41,19 @@ var GOOGLE = (argv.length == 4),
 		RANDO_CHANCE = 0,
 		num_initial_randos = 0,
 		// holds the pairs of conversation partners.
-		PAIRS = [],
-		INITIAL_MSGS = [],
-		ONLINE = [],
+		PAIRS = {},
+		INITIAL_MSGS = {},
+		ONLINE = {},
 		my_jid = argv[2];
 
-var BLACKLIST = ['03kio453bg4lj1h1nz593suvkh@public.talk.google.com'];
+var BLACKLIST = ['03kio453bg4lj1h1nz593suvkh@public.talk.google.com', //Les Vogel
+								 '-627150145@chat.facebook.com', //Noah Tye
+								 '-618057812@chat.facebook.com', //Eva
+								 '-661897362@chat.facebook.com', //Lindsay
+								 '-1043220377@chat.facebook.com', //Cassi
+								 '-1293810335@chat.facebook.com', //SamYang
+								 '-1389652921@chat.facebook.com' //SamB
+								 ];
 
 var MYLIST = ['appathybiz@gmail.com', 'pbooth@twitter.com', 'thepaulbooth@gmail.com'];
 
@@ -82,7 +89,15 @@ xmpp.on('online', function() {
 				randos.push(rando);
 			}
 		}
-		var first_messages = [
+
+		for (var i = 0; i < randos.length; i++) {
+			pingUser(randos[i]);
+		}
+	}, 500);
+});
+
+function pingUser(jid, message) {
+	var first_messages = [
 			'hi',
 			'hey',
 			'what\'s up?',
@@ -93,13 +108,13 @@ xmpp.on('online', function() {
 			'Ask me a good question!',
 			'hey you :)'
 		];
-		for (var i = 0; i < randos.length; i++) {
-			var message = first_messages[Math.floor(Math.random() * first_messages.length)];
-			xmpp.send(randos[i], message);
-			console.log ("Started by sending '" + message + "' to " + randos[i]);
-		}
-	}, 500);
-});
+	if (!message) {
+		message = first_messages[Math.floor(Math.random() * first_messages.length)];
+		xmpp.send(jid, message);
+		console.log ("Pinged '" + message + "' to " + jid);
+	}
+}
+
 
 xmpp.on('chat', function(from, message) {
 	console.log("#########################CHAT:" + message + " FROM:" + from);
@@ -178,13 +193,13 @@ function sendMessageToPartner(from, message) {
 	}
 
 	// If it is a google jid, we can probe, otherwise (facebook) we can't probe, so assume online
-	if (lonely.indexOf("google.com") != -1 || lonely.indexOf("gmail.com") != -1) {
+	if (isGoogleUser(lonely)) {
 		// see if partner online
 		xmpp.probe(lonely, function(state) {
 			console.log("Done probing " + lonely)
 			console.log(state)
 			if (state != xmpp.STATUS.OFFLINE) {
-				xmpp.send(lonely, message);
+				xmpp.send(lonely, repersonalizeMessage(message, ONLINE[lonely]));
 			} else {
 				console.log("WELL, " + lonely + " is offline.");
 				PAIRS[from] = null;
@@ -195,8 +210,15 @@ function sendMessageToPartner(from, message) {
 		});
 	} else {
 		console.log("sending " + lonely + " message: " + message);
-		xmpp.send(lonely, message);
+		xmpp.send(lonely, repersonalizeMessage(message, ONLINE[lonely]));
 	}
+}
+
+function repersonalizeMessage(message, to_user) {
+	if (!to_user || !to_user.first_name || !to_user.last_name) {
+		return message.replace(new RegExp(my_user.first_name, 'gi'), "friend").replace(new RegExp(my_user.last_name, 'gi'), "Mate");
+	}
+	return message.replace(new RegExp(my_user.first_name, 'gi'), to_user.first_name).replace(new RegExp(my_user.last_name, 'gi'), to_user.last_name);
 }
 
 function getRando(exclude) {
@@ -213,6 +235,43 @@ function getRando(exclude) {
 	return rando;
 }
 
+function isGoogleUser(jid) {
+	return jid.indexOf("google.com") != -1 || jid.indexOf("gmail.com") != -1
+}
+
+//Only for Fb users
+function addFbUserToOnline(jid) {
+	var options = {
+		  host: 'graph.facebook.com',
+		  port: 443,
+		  path: '/' + jid.replace("@chat.facebook.com", "").replace("-","") + '?access_token=' + access_token
+		};
+	https.get(options, function(fbres) {
+
+		  var output = '';
+    	fbres.on('data', function (chunk) {
+    			//console.log("CHUNK:" + chunk);
+          output += chunk;
+      });
+
+      fbres.on('end', function() {
+      	try{
+	        var user = JSON.parse(output);
+	        console.log("Adding FB user " + jid + " to ONLINE:" + JSON.stringify(user));
+	        ONLINE[jid] = user;
+	      } catch(e) {
+	      	console.log(e);
+	      	console.log("BAD OUTPUT:");
+	      	console.log(output);
+	      }
+			});
+	});
+}
+
+function addSimpleJidToOnline(jid) {
+	//console.log("Adding simple user to ONLINE:" + jid)
+	ONLINE[jid] = {name: jid};
+}
 
 xmpp.on('error', function(err) {
 	console.error(err);
@@ -221,10 +280,15 @@ xmpp.on('error', function(err) {
 xmpp.on('buddy', function(jid, state) {
 	console.log("---------------%s is now '%s'", jid, state);
 	if (state == xmpp.STATUS.ONLINE) {
-			ONLINE.push(jid);
+		if (isGoogleUser(jid)) {
+			addSimpleJidToOnline(jid);
+		} else {
+			// assume facebook
+			addFbUserToOnline(jid);
+		}
 	} else {
-		if (jid in ONLINE) {
-			ONLINE.splice(ONLINE.indexOf(jid),1);
+		if (ONLINE[jid]) {
+			delete ONLINE[jid];
 		}
 		if (PAIRS[jid]) {
 			PAIRS[PAIRS[jid]] = null;
@@ -234,6 +298,7 @@ xmpp.on('buddy', function(jid, state) {
 });
 
 if (GOOGLE) {
+	console.log("Google mode activated. Working, but look Go to " + hostUrl);
 	// Google talk stuff
 	// example call: node echo.js thephantompaulbooth@gmail.com MyPasswordIsN0tKittens
 	xmpp.connect({
@@ -246,6 +311,7 @@ if (GOOGLE) {
 
 } else {
 	console.log("Facebook mode activated. Go to " + hostUrl);
+
 	var access_token = null;
 	var my_user = null;
 	// xmpp.connect({
@@ -259,7 +325,7 @@ if (GOOGLE) {
 	// The actual app and server
 	var app = express.createServer();
 	app.set('views', __dirname + '/views');
-	app.use(express.static(__dirname + '/../public'));
+	app.use(express.static(__dirname + '/public'));
 
 	app.get('/', function(req, res){
 		var redirect_url = 'https://www.facebook.com/dialog/oauth?client_id=' + apiKey +
@@ -405,8 +471,47 @@ if (GOOGLE) {
 		} else {
 			console.log ("ACCESS TOKEN AT CHAT:" + access_token);
 		}
-		res.render('index.jade', {name: my_user.name, online: ONLINE});
+		var locals = {name: my_user.name,
+									online: Object.keys(ONLINE).map(function(jid) { return {jid:jid, user:ONLINE[jid]} }).sort(function(user1, user2) {return (user1.user.name == user2.user.name) ? 0: (user1.user.name > user2.user.name ? 1 : -1)}),
+									pairs: Object.keys(PAIRS).map(function(jid) { return [ {jid:jid, user:ONLINE[jid]}, {jid:jid, user:ONLINE[PAIRS[jid]]} ]  })   }
+		console.log("locals:")
+		console.log(JSON.stringify(locals, undefined, 2));
+		console.log("online:");
+		console.log(ONLINE);
+		console.log("online as string:");
+		console.log(JSON.stringify(ONLINE, undefined, 2));
+		res.render('index.jade', locals);
 		//res.send("CHATTING IT UP, " + my_user.name + ", with: <ul><li>" + ONLINE.join('</li><li>') + '</li></ul>');
+	});
+
+	app.get('/fbping', function(req, res) {
+		var fbid = req.query['fbid'];
+		var jid = '-' + fbid + '@chat.facebook.com';
+		pingUser(jid);
+		res.redirect('/chat');
+	});
+
+	app.get('/getdata', function(req, res) {
+		// console.log("XXgetdata ************************");
+		// console.log(JSON.stringify({online: ONLINE, pairs: PAIRS, my_user: my_user}));
+		// console.log("online:")
+		// console.log(ONLINE);
+		// console.log("online stringified:")
+		// console.log(JSON.stringify(ONLINE));
+		// console.log( "XX/getdata ***************")
+		res.send(JSON.stringify({online: ONLINE, pairs: PAIRS, my_user: my_user}));
+	});
+
+	app.post('/deletepair', function(req, res) {
+		console.log("deletepair");
+		console.log(req);
+		console.log(req.query);
+		console.log(req.query['pair']);
+		var pair = req.query['pair'];
+		for (var i = 0; i < pair.length; i++) {
+			delete PAIRS[pair[i].jid];
+		}
+		res.send("OK");
 	});
 
 	app.listen(3000);

@@ -1,6 +1,29 @@
-h1 Welcome to Chaterr, #{name}
-- if (online.length)
-ul
-  - online.forEach(function(item){
-    li= item
-  - })
+
+!!! 5
+html(lang='en')
+  head
+    title Chaterr
+    script(src='jquery.js')
+    script(src='chaterr_client.js')
+body
+
+  h1 Welcome to Chaterr, #{name}
+
+  - if (pairs.length)
+  h3 Pairs
+  ul(id='pairslist')
+    - pairs.forEach(function(pair){
+      li
+        - if (pair[0].user)
+          a(href='http://facebook.com/#{pair[0].user.id}', jid='#{pair[0].jid}') #{pair[0].user.name}
+        - if (pair[1].user)
+          a(href='http://facebook.com/#{pair[1].user.id}', style='margin-left:10px', jid='#{pair[1].jid}') #{pair[1].user.name}
+    - })
+  - if (online.length)
+  h3 ONLINE
+  ul(id='onlinelist')
+    - online.forEach(function(user){
+      li
+        a(href='http://facebook.com/#{user.user.id}' ) #{user.user.name}
+        a(href='/fbping?fbid=#{user.user.id}' ) PING
+    - })
