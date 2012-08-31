@@ -119,10 +119,9 @@ function sendMessageToPartner(from, message) {
   var lonely = PAIRS[from];
   console.log("going to tell " + from + "'s partner (" + lonely + "): " + message);
   // check if need a partner
-  if (lonely == null || lonely == undefined || PAIRS[lonely] == null || PAIRS[lonely] == undefined) {
-    console.log(JSON.stringify(PAIRS));
+  if (lonely == null || lonely == undefined) {
+    console.log(JSON.stringify(PAIRS, undefined, 2));
     lonely = getLoneliestPair(from);
-    console.log(lonely)
     PAIRS[from] = lonely;
     console.log("" + from + "'s new partner IS! The lonely " + lonely);
     if (lonely != null) {
