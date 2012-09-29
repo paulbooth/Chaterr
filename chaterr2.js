@@ -6,6 +6,7 @@ var my_user = null; // The current Facebook user, so we don't request a bunch
 var xmpp = require('./simple-xmpp');
 var argv = process.argv;
 var https = require('https');
+var childProcess = require('child_process'); // to call external programs
 
 var hostUrl = 'http://localhost:3000';
 
@@ -15,6 +16,7 @@ var express = require('express');
 // and we should let them use Google chat
 var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
     num_initial_randos = 0,
+    CLEVERBOT = true,
     // holds the pairs of conversation partners.
     PAIRS = {},
     INITIAL_MSGS = {},
@@ -58,7 +60,11 @@ xmpp.on('online', function() {
 xmpp.on('chat', function(from, message) {
   console.log("#########################CHAT:" + message + " FROM:" + from);
   // time to pair people up.
-  sendMessageToPartner(from, message);
+  if (CLEVERBOT) {
+    sendMessageToCleverBot(from, message);
+  } else {
+    sendMessageToPartner(from, message);
+  }
 });
 
 // xmpp.on('stanza', function(stanza) {
@@ -114,7 +120,6 @@ function pingUser(jid, message) {
   console.log ("Pinged '" + message + "' to " + jid);
 }
 
-
 function sendMessageToPartner(from, message) {
   var lonely = PAIRS[from];
   console.log("going to tell " + from + "'s partner (" + lonely + "): " + message);
@@ -158,6 +163,22 @@ function sendMessageToPartner(from, message) {
   }
   console.log("sending " + lonely + " message: " + message);
   xmpp.send(lonely, repersonalizeMessage(message, ONLINE[lonely]));
+}
+
+function sendMessageToCleverBot(from, message) {
+  console.log('sending message to cleverbot:' + message);
+  var cleverbot = childProcess.exec('python cleverbot.py "' + message + '"', function (error, stdout, stderr) {
+   // if (error) {
+   //   console.log(error.stack);
+   //   console.log('Error code: '+error.code);
+   //   console.log('Signal received: '+error.signal);
+   // }
+   // console.log('Child Process STDOUT: '+stdout);
+   // console.log('Child Process STDERR: '+stderr);
+   console.log('CLEVERBOT: ' + stdout);
+   console.log('CLEVERERROR: ' + stderr);
+   xmpp.send(from, stdout);
+  });
 }
 
 function repersonalizeMessage(message, to_user) {
@@ -220,18 +241,23 @@ function removeUserFromOnline(jid) {
 }
 
 function startXmppServer() {
-  xmpp.connect({
-    jid: '-WWW.FACEB0OK.C0M@chat.facebook.com', // where 123456 is the users facebook id
-    api_key: apiKey, // api key of your facebook app
-    secret_key: secretKey, // secret key of your facebook app
-    access_token: access_token, // users current session key
-    host: 'chat.facebook.com'
-  });
+  try {
+    xmpp.connect({
+      jid: '-WWW.FACEB0OK.C0M@chat.facebook.com', // where 123456 is the users facebook id
+      api_key: apiKey, // api key of your facebook app
+      secret_key: secretKey, // secret key of your facebook app
+      access_token: access_token, // users current session key
+      host: 'chat.facebook.com'
+    });
+  } catch (e) {
+    console.log("startXmppserver error");
+    console.log(e);
+  }
 }
 
 console.log("Facebook mode activated. Go to " + hostUrl);
 // The actual app and server
-var app = express.createServer();
+var app = express();
 app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + '/public'));
 
@@ -330,12 +356,12 @@ app.get('/chat', function(req, res) {
   var locals = {name: my_user.name,
                 online: Object.keys(ONLINE).map(function(jid) { return {jid:jid, user:ONLINE[jid]} }).sort(function(user1, user2) {return (user1.user.name == user2.user.name) ? 0: (user1.user.name > user2.user.name ? 1 : -1)}),
                 pairs: Object.keys(PAIRS).map(function(jid) { return [ {jid:jid, user:ONLINE[jid]}, {jid:jid, user:ONLINE[PAIRS[jid]]} ]  })   }
-  console.log("locals:")
-  console.log(JSON.stringify(locals, undefined, 2));
-  console.log("online:");
-  console.log(ONLINE);
-  console.log("online as string:");
-  console.log(JSON.stringify(ONLINE, undefined, 2));
+  // console.log("locals:")
+  // console.log(JSON.stringify(locals, undefined, 2));
+  // console.log("online:");
+  // console.log(ONLINE);
+  // console.log("online as string:");
+  // console.log(JSON.stringify(ONLINE, undefined, 2));
   res.render('index.jade', locals);
   //res.send("CHATTING IT UP, " + my_user.name + ", with: <ul><li>" + ONLINE.join('</li><li>') + '</li></ul>');
 });

@@ -29,7 +29,7 @@ function refreshPairList() {
     var pair = pairsAsList[i];
     var $li = $('<li></li>');
     for (var j = 0; j < pair.length; j++) {
-      if (pair[j]) {
+      if (pair[j] && pair[j].user) {
         var $a = $('<a>' + pair[j].user.name +'</a>');
         $a.attr('href', 'http://facebook.com/' + pair[j].user.id);
         $li.append($a);
