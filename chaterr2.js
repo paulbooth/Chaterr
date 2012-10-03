@@ -161,7 +161,7 @@ function sendMessageToPartner(from, message) {
     }
   }
   console.log("sending " + lonely + " message: " + message);
-  xmpp.send(lonely, repersonalizeMessage(message, ONLINE[lonely]));
+  xmpp.send(lonely, repersonalizeMessage(ONLINE[from], message, ONLINE[lonely]));
 }
 
 function sendMessageToCleverBot(from, message) {
@@ -180,11 +180,23 @@ function sendMessageToCleverBot(from, message) {
   });
 }
 
-function repersonalizeMessage(message, to_user) {
-  if (!to_user || !to_user.first_name || !to_user.last_name) {
-    return message.replace(new RegExp(my_user.first_name, 'gi'), "friend").replace(new RegExp(my_user.last_name, 'gi'), "Mate");
+function repersonalizeMessage(from_user, msg, to_user) {
+  var first_name_secret = "<MYFIRSTNAME>",
+      last_name_secret = "<MYLASTNAME>"
+  var message = msg.replace(new RegExp(my_user.first_name, 'gi'), first_name_secret).replace(new RegExp(my_user.last_name, 'gi'), last_name_secret);
+
+  if (!from_user || !from_user.first_name || !from_user.last_name) {
+    message = message.replace(new RegExp(from_user.first_name, 'gi'), "I").replace(new RegExp(from_user.last_name, 'gi'), "myself");
+  } else {
+    message = message.replace(new RegExp(from_user.first_name, 'gi'), my_user.first_name).replace(new RegExp(from_user.last_name, 'gi'), my_user.last_name);
   }
-  return message.replace(new RegExp(my_user.first_name, 'gi'), to_user.first_name).replace(new RegExp(my_user.last_name, 'gi'), to_user.last_name);
+
+  if (!to_user || !to_user.first_name || !to_user.last_name) {
+    message = message.replace(new RegExp(first_name_secret, 'gi'), "friend").replace(new RegExp(last_name_secret, 'gi'), "Mate");
+  } else {
+    message = message.replace(new RegExp(first_name_secret, 'gi'), to_user.first_name).replace(new RegExp(last_name_secret, 'gi'), to_user.last_name);
+  }
+  return message;
 }
 
 function getRando(exclude) {
