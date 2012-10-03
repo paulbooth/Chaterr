@@ -169,7 +169,7 @@ function sendMessageToPartner(from, message) {
     if (lonely != null) {
       PAIRS[lonely] = from;
       if (INITIAL_MSGS[lonely]) {
-        console.log("" + llonely + "(" + getName(lonely) + ") has a waiting message for " + from + "(" + getName(from) + "). It's: " + INITIAL_MSGS[lonely]);
+        console.log("" + lonely + "(" + getName(lonely) + ") has a waiting message for " + from + "(" + getName(from) + "). It's: " + INITIAL_MSGS[lonely]);
         sendMessageToPartner(lonely, INITIAL_MSGS[lonely]);
         delete INITIAL_MSGS[lonely];
       }
