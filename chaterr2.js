@@ -1,5 +1,4 @@
-var apiKey = '486184408064731';
-var secretKey = '042681525933472c91d1c6e57ea1219e';
+
 var access_token = null; // For Facebook
 var my_user = null; // The current Facebook user, so we don't request a bunch
 
@@ -8,13 +7,14 @@ var argv = process.argv;
 var https = require('https');
 var childProcess = require('child_process'); // to call external programs
 
-var hostUrl = 'http://thepaulbooth:3000';
+
 
 var express = require('express');
 // if there are four arguments, they called
 // node echo.js USER PASSWORD
 // and we should let them use Google chat
 var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
+    LOCALMODE = false, // running localhost or thepaulbooth.com
     num_initial_randos = 0,
     CLEVERBOT = false,
     CLEVERBOT_PING = false,
@@ -23,6 +23,17 @@ var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person p
     INITIAL_MSGS = {},
     ONLINE = {},
     my_jid = argv[2];
+
+// for the public
+var hostUrl = 'http://thepaulbooth:3000';
+var apiKey = '486184408064731';
+var secretKey = '042681525933472c91d1c6e57ea1219e';
+
+if (LOCALMODE) {
+  hostUrl = 'http://localhost:3000';
+  apiKey = '101549946670437';
+  secretKey = 'a0fc3798d2eac40cfd52bd2124448868';
+}
 
 var BLACKLIST = ['03kio453bg4lj1h1nz593suvkh@public.talk.google.com', //Les Vogel
                  '-627150145@chat.facebook.com', //Noah Tye
