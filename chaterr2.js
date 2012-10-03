@@ -28,9 +28,9 @@ var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person p
     my_jid = argv[2];
 
 // for the public
-var hostUrl = 'http://thepaulbooth:3000';
-var apiKey = '517780171583045';
-var secretKey = '3dcc4c672c8c9f02bdd4cdb446d8fcd4';
+var hostUrl = 'http://thepaulbooth.com:3000';
+var apiKey = '486184408064731';
+var secretKey = '76eeb7260c706fcd7f57ee3172560ff4';
 
 if (LOCALMODE) {
   hostUrl = 'http://localhost:3000';
