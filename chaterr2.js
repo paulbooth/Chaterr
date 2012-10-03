@@ -189,12 +189,18 @@ function repersonalizeMessage(from_user, msg, to_user) {
     message = message.replace(new RegExp(from_user.first_name, 'gi'), "I").replace(new RegExp(from_user.last_name, 'gi'), "myself");
   } else {
     message = message.replace(new RegExp(from_user.first_name, 'gi'), my_user.first_name).replace(new RegExp(from_user.last_name, 'gi'), my_user.last_name);
+    if (message.split(/\s/).join("").toUpperCase() == ("" + from_user.first_name[0] + from_user.last_name[0]).toUpperCase()) {
+      return "" + my_user.first_name[0] + my_user.last_name[0]
+    }
   }
 
   if (!to_user || !to_user.first_name || !to_user.last_name) {
     message = message.replace(new RegExp(first_name_secret, 'gi'), "friend").replace(new RegExp(last_name_secret, 'gi'), "Mate");
   } else {
     message = message.replace(new RegExp(first_name_secret, 'gi'), to_user.first_name).replace(new RegExp(last_name_secret, 'gi'), to_user.last_name);
+    if (message.split(/\s/).join("").toUpperCase() == ("" + my_user.first_name[0] + my_user.last_name[0]).toUpperCase()) {
+      return "" + to_user.first_name[0] + to_user.last_name[0]
+    }
   }
   return message;
 }
