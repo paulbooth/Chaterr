@@ -13,13 +13,13 @@ var express = require('express');
 // if there are four arguments, they called
 // node echo.js USER PASSWORD
 // and we should let them use Google chat
-var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
+var RANDO_CHANCE = 0.5, // Chance of getting a rando pulled in when a new person pings in
     LOCALMODE = false, // running localhost or thepaulbooth.com
     RANDO_PINGING = false,
     RANDO_PING_TIME = 60 * 60 * 1000,
     RANDO_PING_NUM = 6,
-    num_initial_randos = 10,
-    CLEVERBOT = true,
+    num_initial_randos = 6,
+    CLEVERBOT = false,
     CLEVERBOT_PING = false,
     // holds the pairs of conversation partners.
     PAIRS = {},
