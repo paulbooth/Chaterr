@@ -8,7 +8,7 @@ var argv = process.argv;
 var https = require('https');
 var childProcess = require('child_process'); // to call external programs
 
-var hostUrl = 'http://localhost:3000';
+var hostUrl = 'http://thepaulbooth:3000';
 
 var express = require('express');
 // if there are four arguments, they called
