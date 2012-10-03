@@ -30,7 +30,7 @@ var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person p
 // for the public
 var hostUrl = 'http://thepaulbooth:3000';
 var apiKey = '486184408064731';
-var secretKey = '042681525933472c91d1c6e57ea1219e';
+var secretKey = '76eeb7260c706fcd7f57ee3172560ff4';
 
 if (LOCALMODE) {
   hostUrl = 'http://localhost:3000';
