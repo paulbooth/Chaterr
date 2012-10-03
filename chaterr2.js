@@ -268,12 +268,14 @@ function repersonalizeMessage(from_user, msg, to_user) {
       last_name_secret = "<MYLASTNAME>"
   var message = msg.replace(new RegExp(my_user.first_name, 'gi'), first_name_secret).replace(new RegExp(my_user.last_name, 'gi'), last_name_secret);
 
-  if (!my_user || !my_user.first_name || !my_user.last_name) {
-    message = message.replace(new RegExp(from_user.first_name, 'gi'), "I").replace(new RegExp(from_user.last_name, 'gi'), "myself");
-  } else {
-    message = message.replace(new RegExp(from_user.first_name, 'gi'), my_user.first_name).replace(new RegExp(from_user.last_name, 'gi'), my_user.last_name);
-    if (message.split(/[\s.]/).join("").toUpperCase() == ("" + from_user.first_name[0] + from_user.last_name[0]).toUpperCase()) {
-      return "" + my_user.first_name[0] + my_user.last_name[0]
+  if (from_user && from_user.first_name && from_user.last_name) {
+    if (!my_user || !my_user.first_name || !my_user.last_name) {
+      message = message.replace(new RegExp(from_user.first_name, 'gi'), "I").replace(new RegExp(from_user.last_name, 'gi'), "myself");
+    } else {
+      message = message.replace(new RegExp(from_user.first_name, 'gi'), my_user.first_name).replace(new RegExp(from_user.last_name, 'gi'), my_user.last_name);
+      if (message.split(/[\s.]/).join("").toUpperCase() == ("" + from_user.first_name[0] + from_user.last_name[0]).toUpperCase()) {
+        return "" + my_user.first_name[0] + my_user.last_name[0]
+      }
     }
   }
 
@@ -493,13 +495,13 @@ app.get('/getdata', function(req, res) {
 
 // Deletes a pair of users
 app.post('/deletepair', function(req, res) {
+  console.log("Deleting pair:");
   // console.log("deletepair");
   // console.log(req);
   // console.log(req.query);
   // console.log(req.query['pair']);
-  // console.log("body:" + JSON.stringify(req.body, undefined, 2));
+  console.log("body:" + JSON.stringify(req.body, undefined, 2));
   // console.log("body.pairs:" + req.body.pair);
-  console.log("Deleting pair:");
   var pair = req.body.pair;
   for (var i = 0; i < pair.length; i++) {
     delete PAIRS[pair[i].jid];
