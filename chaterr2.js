@@ -154,7 +154,8 @@ function pingUser(jid, message) {
       'what\'s up?',
       'sup',
       'how was your day?',
-      'what are you up to right now?',
+      'hey there',
+      'yo',
       'how have you been?',
       'hey you :D',
       'I\'m bored. Let\'s talk!'

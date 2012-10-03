@@ -83,7 +83,7 @@ function refreshUI() {
 }
 
 function getListPairs() {
-  return Object.keys(pairs).map(function(jid) { return [ {jid:jid, user:online[jid]}, {jid:jid, user:online[pairs[jid]]} ]  })
+  return Object.keys(pairs).map(function(jid) { return [ {jid:jid, user:online[jid]}, {jid:pairs[jid], user:online[pairs[jid]]} ]  })
 }
 
 function getListOnline() {
