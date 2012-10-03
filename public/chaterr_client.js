@@ -1,7 +1,7 @@
 var online = [];
 var pairs = [];
 var my_user = null;
-var hostUrl = 'http://localhost:3000';
+var hostUrl = 'http://thepaulbooth.com:3000';
 $(function(){
   refreshData();
   setInterval(refreshData, 5000);
