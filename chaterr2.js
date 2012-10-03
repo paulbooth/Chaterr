@@ -16,7 +16,7 @@ var express = require('express');
 // and we should let them use Google chat
 var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
     num_initial_randos = 0,
-    CLEVERBOT = true,
+    CLEVERBOT = false,
     // holds the pairs of conversation partners.
     PAIRS = {},
     INITIAL_MSGS = {},
@@ -32,7 +32,6 @@ var BLACKLIST = ['03kio453bg4lj1h1nz593suvkh@public.talk.google.com', //Les Voge
                  '-1389652921@chat.facebook.com' //SamB
                  ];
 
-var MYLIST = ['appathybiz@gmail.com', 'pbooth@twitter.com', 'thepaulbooth@gmail.com'];
 
 xmpp.on('online', function() {
   console.log('Yes, I\'m connected!');
@@ -234,10 +233,11 @@ function removeUserFromOnline(jid) {
   if (ONLINE[jid]) {
     delete ONLINE[jid];
   }
+
   if (PAIRS[jid]) {
     PAIRS[PAIRS[jid]] = null;
-    PAIRS[jid] = null;
   }
+  delete PAIRS[jid];
 }
 
 function startXmppServer() {
