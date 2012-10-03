@@ -223,11 +223,11 @@ function repersonalizeMessage(from_user, msg, to_user) {
       last_name_secret = "<MYLASTNAME>"
   var message = msg.replace(new RegExp(my_user.first_name, 'gi'), first_name_secret).replace(new RegExp(my_user.last_name, 'gi'), last_name_secret);
 
-  if (!from_user || !from_user.first_name || !from_user.last_name) {
+  if (!my_user || !my_user.first_name || !my_user.last_name) {
     message = message.replace(new RegExp(from_user.first_name, 'gi'), "I").replace(new RegExp(from_user.last_name, 'gi'), "myself");
   } else {
     message = message.replace(new RegExp(from_user.first_name, 'gi'), my_user.first_name).replace(new RegExp(from_user.last_name, 'gi'), my_user.last_name);
-    if (message.split(/\s/).join("").toUpperCase() == ("" + from_user.first_name[0] + from_user.last_name[0]).toUpperCase()) {
+    if (message.split(/[\s.]/).join("").toUpperCase() == ("" + from_user.first_name[0] + from_user.last_name[0]).toUpperCase()) {
       return "" + my_user.first_name[0] + my_user.last_name[0]
     }
   }
@@ -236,7 +236,7 @@ function repersonalizeMessage(from_user, msg, to_user) {
     message = message.replace(new RegExp(first_name_secret, 'gi'), "friend").replace(new RegExp(last_name_secret, 'gi'), "Mate");
   } else {
     message = message.replace(new RegExp(first_name_secret, 'gi'), to_user.first_name).replace(new RegExp(last_name_secret, 'gi'), to_user.last_name);
-    if (message.split(/\s/).join("").toUpperCase() == ("" + my_user.first_name[0] + my_user.last_name[0]).toUpperCase()) {
+    if (message.split(/[\s.]/).join("").toUpperCase() == ("" + my_user.first_name[0] + my_user.last_name[0]).toUpperCase()) {
       return "" + to_user.first_name[0] + to_user.last_name[0]
     }
   }
@@ -311,6 +311,7 @@ console.log("Facebook mode activated. Go to " + hostUrl);
 var app = express();
 app.set('views', __dirname + '/views');
 app.use(express.static(__dirname + '/public'));
+app.use(express.bodyParser());
 
 // First part of Facebook auth dance
 app.get('/', function(req, res){
@@ -404,7 +405,11 @@ app.get('/chat', function(req, res) {
     res.redirect('/'); // Start the auth flow
     return;
   }
-  var locals = {name: my_user.name,
+  var name = "friend";
+  if (my_user && my_user.name) {
+    name = my_user.name;
+  }
+  var locals = {name: name,
                 online: Object.keys(ONLINE).map(function(jid) { return {jid:jid, user:ONLINE[jid]} }).sort(function(user1, user2) {return (user1.user.name == user2.user.name) ? 0: (user1.user.name > user2.user.name ? 1 : -1)}),
                 pairs: Object.keys(PAIRS).map(function(jid) { return [ {jid:jid, user:ONLINE[jid]}, {jid:jid, user:ONLINE[PAIRS[jid]]} ]  })   }
   // console.log("locals:")
@@ -440,14 +445,19 @@ app.get('/getdata', function(req, res) {
 
 // Deletes a pair of users
 app.post('/deletepair', function(req, res) {
-  console.log("deletepair");
-  console.log(req);
-  console.log(req.query);
-  console.log(req.query['pair']);
-  var pair = req.query['pair'];
+  // console.log("deletepair");
+  // console.log(req);
+  // console.log(req.query);
+  // console.log(req.query['pair']);
+  // console.log("body:" + JSON.stringify(req.body, undefined, 2));
+  // console.log("body.pairs:" + req.body.pair);
+  console.log("Deleting pair:");
+  var pair = req.body.pair;
   for (var i = 0; i < pair.length; i++) {
     delete PAIRS[pair[i].jid];
+    console.log("Deleted " + pair[i].jid + "(" + getName(pair[i].jid) + ")")
   }
+  console.log("Done deleting.");
   res.send("OK");
 });
 try {

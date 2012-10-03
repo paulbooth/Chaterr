@@ -35,11 +35,13 @@ function refreshPairList() {
         $li.append($a);
       }
     }
-    var $delbutton = $('<input type=button>DELETE</input>');
+    var $delbutton = $('<button>DELETE</buton>');
     $delbutton.click(function() {
+      console.log("del button pressed");
+      console.log(pair);
       $.post(
         "deletepair",
-        {pair: pair},
+        {"pair": pair},
         function(data) {
           console.log("deleted pair");
           console.log(data);
