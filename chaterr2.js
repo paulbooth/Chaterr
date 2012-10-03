@@ -103,17 +103,25 @@ function getLoneliestPair(from) {
 
 function pingUser(jid, message) {
   var first_messages = [
-      'hi',
+      'I feel like we haven\'t talked in a while.\nWhat\'s up with you these days?',
       'hey',
       'what\'s up?',
       'sup',
       'how was your day?',
       'what are you up to right now?',
       'how have you been?',
-      'hey you :)'
+      'hey you :D',
+      'I\'m bored. Let\'s talk!'
     ];
   if (!message) {
-    message = first_messages[Math.floor(Math.random() * first_messages.length)];
+    var lonelyman = getLoneliestPair(null);
+    if (lonelyman && INITIAL_MSGS[lonelyman]) {
+      message = INITIAL_MSGS[lonelyman];
+      message = repersonalizeMessage(ONLINE[lonelyman], message, ONLINE[jid])
+      delete INITIAL_MSGS[lonelyman];
+    } else {
+      message = first_messages[Math.floor(Math.random() * first_messages.length) ];
+    }
   }
   xmpp.send(jid, message);
   console.log ("Pinged '" + message + "' to " + jid);
@@ -259,18 +267,13 @@ function removeUserFromOnline(jid) {
 }
 
 function startXmppServer() {
-  try {
-    xmpp.connect({
-      jid: '-WWW.FACEB0OK.C0M@chat.facebook.com', // where 123456 is the users facebook id
-      api_key: apiKey, // api key of your facebook app
-      secret_key: secretKey, // secret key of your facebook app
-      access_token: access_token, // users current session key
-      host: 'chat.facebook.com'
-    });
-  } catch (e) {
-    console.log("startXmppserver error");
-    console.log(e);
-  }
+  xmpp.connect({
+    jid: '-WWW.FACEB0OK.C0M@chat.facebook.com', // where 123456 is the users facebook id
+    api_key: apiKey, // api key of your facebook app
+    secret_key: secretKey, // secret key of your facebook app
+    access_token: access_token, // users current session key
+    host: 'chat.facebook.com'
+  });
 }
 
 console.log("Facebook mode activated. Go to " + hostUrl);
@@ -417,5 +420,10 @@ app.post('/deletepair', function(req, res) {
   }
   res.send("OK");
 });
-
-app.listen(3000);
+try {
+  app.listen(3000);
+} catch (e) {
+  console.log("OH NOOOOOO OUR APP BROKE");
+  console.log(e);
+  app.listen(3000);
+}
