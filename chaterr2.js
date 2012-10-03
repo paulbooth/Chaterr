@@ -16,9 +16,9 @@ var express = require('express');
 var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
     LOCALMODE = false, // running localhost or thepaulbooth.com
     RANDO_PINGING = true,
-    RANDO_PING_TIME = 60 * 60 * 1000,
+    RANDO_PING_TIME = 1 * 60 * 1000,
     RANDO_PING_NUM = 6,
-    num_initial_randos = 0,
+    num_initial_randos = 10,
     CLEVERBOT = false,
     CLEVERBOT_PING = false,
     // holds the pairs of conversation partners.
@@ -156,6 +156,7 @@ function pingUser(jid, message) {
       'how was your day?',
       'hey there',
       'yo',
+      ':like:',
       'how have you been?',
       'hey you :D',
       'I\'m bored. Let\'s talk!'
