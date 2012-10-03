@@ -15,11 +15,11 @@ var express = require('express');
 // and we should let them use Google chat
 var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
     LOCALMODE = false, // running localhost or thepaulbooth.com
-    RANDO_PINGING = true,
-    RANDO_PING_TIME = 1 * 60 * 1000,
+    RANDO_PINGING = false,
+    RANDO_PING_TIME = 60 * 60 * 1000,
     RANDO_PING_NUM = 6,
     num_initial_randos = 10,
-    CLEVERBOT = false,
+    CLEVERBOT = true,
     CLEVERBOT_PING = false,
     // holds the pairs of conversation partners.
     PAIRS = {},
