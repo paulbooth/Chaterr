@@ -17,6 +17,7 @@ var express = require('express');
 var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
     num_initial_randos = 0,
     CLEVERBOT = false,
+    CLEVERBOT_PING = false,
     // holds the pairs of conversation partners.
     PAIRS = {},
     INITIAL_MSGS = {},
@@ -123,8 +124,29 @@ function pingUser(jid, message) {
       message = first_messages[Math.floor(Math.random() * first_messages.length) ];
     }
   }
-  xmpp.send(jid, message);
-  console.log ("Pinged '" + message + "' to " + jid);
+  if (CLEVERBOT_PING) {
+    pingUserWithCleverBot(jid, message);
+  } else {
+    xmpp.send(jid, message);
+    console.log ("Pinged '" + message + "' to " + jid);
+  }
+}
+
+function pingUserWithCleverBot(jid, message) {
+  console.log('sending ping message to cleverbot:' + message);
+  var cleverbot = childProcess.exec('python cleverbot.py "' + message + '"', function (error, stdout, stderr) {
+   // if (error) {
+   //   console.log(error.stack);
+   //   console.log('Error code: '+error.code);
+   //   console.log('Signal received: '+error.signal);
+   // }
+   // console.log('Child Process STDOUT: '+stdout);
+   // console.log('Child Process STDERR: '+stderr);
+   console.log('CLEVERBOT: ' + stdout);
+   console.log('CLEVERERROR: ' + stderr);
+   xmpp.send(jid, stdout);
+   console.log ("Pinged '" + stdout + "' to " + jid);
+  });
 }
 
 function sendMessageToPartner(from, message) {
