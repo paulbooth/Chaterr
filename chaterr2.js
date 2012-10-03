@@ -15,6 +15,9 @@ var express = require('express');
 // and we should let them use Google chat
 var RANDO_CHANCE = 0, // Chance of getting a rando pulled in when a new person pings in
     LOCALMODE = false, // running localhost or thepaulbooth.com
+    RANDO_PINGING = true,
+    RANDO_PING_TIME = 60 * 60 * 1000,
+    RANDO_PING_NUM = 6,
     num_initial_randos = 0,
     CLEVERBOT = false,
     CLEVERBOT_PING = false,
@@ -41,31 +44,59 @@ var BLACKLIST = ['03kio453bg4lj1h1nz593suvkh@public.talk.google.com', //Les Voge
                  '-661897362@chat.facebook.com', //Lindsay
                  '-1043220377@chat.facebook.com', //Cassi
                  '-1293810335@chat.facebook.com', //SamYang
-                 '-1389652921@chat.facebook.com' //SamB
+                 '-1389652921@chat.facebook.com', //SamB
+                 '-205109@chat.facebook.com' //Peter Deng
+
                  ];
 
+// general purpose getrandomproperty function
+function getRandomProperty(obj) {
+    var result;
+    var count = 0;
+    for (var prop in obj)
+        if (Math.random() < 1/++count)
+           result = prop;
+    return result;
+}
+
+// pings a certain number of randos
+function pingSomeRandos(num_randos) {
+  if (ONLINE.length < num_randos) {
+    num_randos = ONLINE.length;
+  }
+  console.log("PINGING " + num_randos + " RANDOS");
+  var randos = [];
+  for (var i = 0; i < num_randos; i++) {
+    var rando = getRando(randos);
+    console.log("randos:" + randos);
+    console.log("rando:" + rando);
+    console.log("index:" + i);
+    if (rando in randos) {
+      i--;
+    } else {
+      randos.push(rando);
+    }
+  }
+
+  for (var i = 0; i < randos.length; i++) {
+    pingUser(randos[i]);
+  }
+}
 
 xmpp.on('online', function() {
   console.log('Yes, I\'m connected!');
   // put in a timeout to make sure that there are people online
   setTimeout(function(){
-    var randos = [];
-    for (var i = 0; i < num_initial_randos; i++) {
-      var rando = getRando(randos);
-      console.log("randos:" + randos);
-      console.log("rando:" + rando);
-      console.log("index:" + i);
-      if (rando in randos) {
-        i--;
-      } else {
-        randos.push(rando);
-      }
+    pingSomeRandos(num_initial_randos);
+
+    // set up the rando pinging at certain times, after waiting for people to appear online
+    if (RANDO_PINGING && RANDO_PING_TIME > 0 && RANDO_PING_NUM > 0) {
+      setInterval(function() {
+        pingSomeRandos(RANDO_PING_NUM);
+      }, RANDO_PING_TIME);
     }
 
-    for (var i = 0; i < randos.length; i++) {
-      pingUser(randos[i]);
-    }
-  }, 500);
+  }, 1000);
 });
 
 xmpp.on('chat', function(from, message) {
@@ -83,17 +114,20 @@ xmpp.on('chat', function(from, message) {
 // });
 
 xmpp.on('error', function(err) {
+  console.log("XMPP ERROROROROROR");
   console.error(err);
 });
 
 xmpp.on('buddy', function(jid, state) {
-  console.log("---------------%s is now '%s'", jid, state);
   if (state == xmpp.STATUS.ONLINE) {
+    console.log("---------------%s is now '%s'", jid, state);
     // assume facebook
     addUserToOnline(jid);
   } else {
+    console.log("---------------%s (%s) is now '%s'", jid, getName(jid), state);
     removeUserFromOnline(jid);
   }
+  
 });
 
 
@@ -139,7 +173,7 @@ function pingUser(jid, message) {
     pingUserWithCleverBot(jid, message);
   } else {
     xmpp.send(jid, message);
-    console.log ("Pinged '" + message + "' to " + jid);
+    console.log ("Pinged '" + message + "' to " + jid + "(" + getName(jid) + ")");
   }
 }
 
@@ -259,10 +293,13 @@ function getRando(exclude) {
   if (typeof(exclude) != typeof([])) {
     exclude = [exclude];
   }
+  console.log("entering while loop");
   while (rando == null || rando == my_jid || rando in BLACKLIST || rando in exclude ) {
-    rando = ONLINE[Math.floor ( Math.random() * ONLINE.length )];
+    rando = getRandomProperty(ONLINE);
+    console.log("trying rando: " + rando + "(" + getName(rando) + ")");
     if (rando in PAIRS && PAIRS[rando] in PAIRS) {
-      console.log("rando " + rando + " is already in PAIRS with partner:" + PAIRS[rando]);
+      console.log("rando " + rando + "(" + getName(rando) + ") is already in PAIRS with partner:" + PAIRS[rando] + "(" + getName(PAIRS[rando]) + ")");
+      rando = null;
     }
   }
   return rando;
