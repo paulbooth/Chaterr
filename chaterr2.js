@@ -58,7 +58,7 @@ xmpp.on('online', function() {
 });
 
 xmpp.on('chat', function(from, message) {
-  console.log("#########################CHAT:" + message + " FROM:" + from);
+  console.log("#########################CHAT:" + message + " FROM:" + from + " (" + getName(from) + ")");
   // time to pair people up.
   if (CLEVERBOT) {
     sendMessageToCleverBot(from, message);
@@ -88,17 +88,17 @@ xmpp.on('buddy', function(jid, state) {
 
 function getLoneliestPair(from) {
    var keys = Object.keys(PAIRS);
-   console.log("Something weird")
-   console.log(PAIRS)
-   console.log(keys);
-   console.log("looking for loneliest person in " + JSON.stringify(PAIRS) + " keys:" + keys);
+   // console.log("Something weird")
+   // console.log(PAIRS)
+   // console.log(keys);
+   // console.log("looking for loneliest person in " + JSON.stringify(PAIRS) + " keys:" + keys);
    for (var i = 0; i < keys.length; i++) {
     console.log("checking " +i +"/" + keys.length + ":" + keys[i]);
     if (keys[i] != from && PAIRS[keys[i]] == null) {
       return keys[i]
     }
    }
-   console.log("no lonely people");
+   // console.log("no lonely people");
    return null;
 }
 
@@ -142,32 +142,40 @@ function pingUserWithCleverBot(jid, message) {
    // }
    // console.log('Child Process STDOUT: '+stdout);
    // console.log('Child Process STDERR: '+stderr);
-   console.log('CLEVERBOT: ' + stdout);
+   console.log('CLEVERBOTOUT: ' + stdout);
    console.log('CLEVERERROR: ' + stderr);
    xmpp.send(jid, stdout);
    console.log ("Pinged '" + stdout + "' to " + jid);
   });
 }
 
+// gets the name associated with a jid, or nothing
+function getName(jid) {
+  if (jid && ONLINE[jid] && ONLINE[jid].name) {
+    return ONLINE[jid].name;
+  }
+  return "?";
+}
+
 function sendMessageToPartner(from, message) {
   var lonely = PAIRS[from];
-  console.log("going to tell " + from + "'s partner (" + lonely + "): " + message);
+  console.log("going to tell " + from + "(" + getName(from) + ")'s partner " + lonely + "(" + getName(lonely) + "): " + message);
   // check if need a partner
   if (lonely == null || lonely == undefined) {
     console.log(JSON.stringify(PAIRS, undefined, 2));
     lonely = getLoneliestPair(from);
     PAIRS[from] = lonely;
-    console.log("" + from + "'s new partner IS! The lonely " + lonely);
+    console.log("" + from + "(" + getName(from) + ")'s new partner IS! The lonely " + lonely + "(" + getName(lonely) + ")");
     if (lonely != null) {
       PAIRS[lonely] = from;
       if (INITIAL_MSGS[lonely]) {
-        console.log("" + lonely + " has a waiting message for " + from + ". It's: " + INITIAL_MSGS[lonely]);
+        console.log("" + llonely + "(" + getName(lonely) + ") has a waiting message for " + from + "(" + getName(from) + "). It's: " + INITIAL_MSGS[lonely]);
         sendMessageToPartner(lonely, INITIAL_MSGS[lonely]);
         delete INITIAL_MSGS[lonely];
       }
     } else {
       if (!INITIAL_MSGS[from] && Math.random() < RANDO_CHANCE) {
-        console.log("" + from + " has no partner. Getting Rando.");
+        console.log("" + from + "(" + getName(from) + ") has no partner. Getting Rando.");
         var rando = getRando(from);
         console.log("rando:" + rando);
         if (rando) {
@@ -185,12 +193,12 @@ function sendMessageToPartner(from, message) {
         } else {
           INITIAL_MSGS[from] = message;
         }
-        console.log("" + from + " has no partner. Saving message:" + INITIAL_MSGS[from]);
+        console.log("" + from + "(" + getName(from) + ") has no partner. Saving message:" + INITIAL_MSGS[from]);
         return;
       }
     }
   }
-  console.log("sending " + lonely + " message: " + message);
+  console.log("sending " + lonely + "(" + getName(lonely) + ") message: " + message);
   xmpp.send(lonely, repersonalizeMessage(ONLINE[from], message, ONLINE[lonely]));
 }
 
